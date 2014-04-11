@@ -8,15 +8,19 @@ use AnyEvent;
 use AnyEvent::Handle;
 use EV;
 
+our $VERSION = '0.01';
+
 my %elements;
 my $formats;
 
-my %options = (
+my %options;
+GetOptions( \%options, "format=s", "metric=s@", ) or pod2usage(2);
+
+%options = (
     format => '%10.2f',
     metric => [ 'count', 'average', 'sum' ],
+    %options,
 );
-
-GetOptions( \%options, "format=s", "metric=s@", ) or pod2usage(2);
 
 my $order_by = $options{metric}->[0];
 
@@ -61,7 +65,7 @@ my $stdin_hdl = init_curses($loop);
 my $pipe_hdl  = init_pipe($pipe);
 
 if ( $loop->recv ) {
-	exit 0;
+    exit 0;
 }
 
 sub init_pipe {
@@ -194,7 +198,7 @@ sub update_curses {
     erase();
     my ( $height, $width );
     getmaxyx( $height, $width );
-    my @metrics = @{$options{metric}};
+    my @metrics = @{ $options{metric} };
 
     my @top_ten_count =
       sort { $b->{$order_by} <=> $a->{$order_by} } values %elements;
@@ -230,3 +234,53 @@ END {
 1;
 
 __END__
+
+=pod
+
+=head1 NAME
+
+topstat - simple statics for stdin with top-like interface
+
+=head1 SYNOPSIS
+
+  data | topstat --metric count --metric average 
+  data | topstat --metric --metric average --format '%10.4f'
+
+=head1 DESCRIPTION
+
+topstat reads lines from stdin, generates statitics from these lines and
+present them in a top-like interface. Every line must contain a number
+as first element, the rest of the line is interpreted as identifier for
+that line. Number and identifier are split by consecutive whitespace.
+
+=head1 INSTALLATION
+
+It is possible to install this script via perl normal install routines. 
+
+  perl Build.PL
+  ./Build
+  ./Build install
+
+Or you can just copy the script somewhere in your path and install the
+dependencies via your normal package system. For example, in Debian:
+
+  apt-get install libcurses-perl libanyevent-perl
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright 2014 Mario Domgoergen L<E<lt>mario@domgoergen.comE<gt>>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+=cut
