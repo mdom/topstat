@@ -1,0 +1,232 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use Getopt::Long;
+use Curses;
+use AnyEvent;
+use AnyEvent::Handle;
+use EV;
+
+my %elements;
+my $formats;
+
+my %options = (
+    format => '%10.2f',
+    metric => [ 'count', 'average', 'sum' ],
+);
+
+GetOptions( \%options, "format=s", "metric=s@", ) or pod2usage(2);
+
+my $order_by = $options{metric}->[0];
+
+my %formats = (
+    count => {
+        header      => "Count",
+        data_format => '%d',
+    },
+    sum => {
+        header      => "Sum",
+        data_format => $options{format},
+    },
+    average => {
+        header      => "Average",
+        data_format => $options{format},
+    },
+    min => {
+        header      => "Minimum",
+        data_format => $options{format},
+    },
+    max => {
+        header      => "Maximum",
+        data_format => $options{format},
+    },
+);
+%formats = compute_formats();
+
+if ( -t *STDIN ) {
+    die "$0: stdin has to be connected to a file or pipe. Exiting.\n";
+}
+
+## dup stdin so curses can get stdin and we can process lines
+## from the dupped stdin
+
+open( my $pipe, '<&', *STDIN ) or die "$!\n";
+
+my $loop = AnyEvent->condvar;
+
+my $timer = AnyEvent->timer( interval => 1.5, cb => sub { update_curses() } );
+
+my $stdin_hdl = init_curses($loop);
+my $pipe_hdl  = init_pipe($pipe);
+
+if ( $loop->recv ) {
+	exit 0;
+}
+
+sub init_pipe {
+    my ($pipe) = @_;
+    $pipe_hdl = AnyEvent::Handle->new(
+        fh       => $pipe,
+        on_error => sub {
+            my ( $hdl, $fatal, $msg ) = @_;
+            warn "$msg\n";
+            $hdl->destroy;
+            $loop->send;
+        },
+        on_eof => sub {
+            my ($hdl) = @_;
+            update_curses()
+              ## TODO eof marker in curses
+        },
+        on_read => sub {
+            shift->push_read(
+                line => sub {
+                    my ( $hdl, $line ) = @_;
+                    process_line( $line, \%elements );
+                    return 0;
+                }
+            );
+        }
+    );
+    return $pipe_hdl;
+}
+
+sub process_line {
+    my ( $line, $elements ) = @_;
+    my ( $element, $number ) = split( ' ', $line );
+    return if !defined($element) || !defined($number);
+    if ( !exists $elements->{$element} ) {
+        $elements->{$element} = {
+            max     => $number,
+            min     => $number,
+            count   => 1,
+            element => $element,
+            sum     => $number,
+            average => $number
+        };
+    }
+    else {
+        my $elt = $elements->{$element};
+        $elt->{count}++;
+        $elt->{sum} += $number;
+        $elt->{max} = $elt->{max} < $number ? $number : $elt->{max};
+        $elt->{min} = $elt->{min} > $number ? $number : $elt->{min};
+        $elt->{average} =
+          ( $elt->{average} * ( $elt->{count} - 1 ) + $number ) / $elt->{count};
+    }
+    return;
+}
+
+sub compute_formats {
+    for my $metric ( keys %formats ) {
+        my $header = $formats{$metric}->{header};
+        my $format = $formats{$metric}->{data_format};
+        if (
+            $format =~ m{
+		^%?
+		(?<format>
+			(?<flags>[-+0\#]*)
+			(?<width>\d*)
+			(?<precision>\.\d*)?
+			(?<conversion>[A-Za-z])
+		)
+	     }smx
+          )
+        {
+
+            my $header_length = length($header);
+            my $column_width  = $header_length;
+            if ( $+{width} ) {
+                $column_width =
+                  $+{width} > $header_length ? $+{width} : $header_length;
+            }
+
+            my $align = index( $+{flags}, '-' ) != -1 ? '-' : '';
+
+            $formats{$metric}->{header_format} = "%${align}${column_width}s";
+            $formats{$metric}->{data_format} =
+                '%'
+              . ( $+{flags} || '' )
+              . ${column_width}
+              . ( $+{precision} || '' )
+              . $+{conversion};
+        }
+    }
+    return %formats;
+}
+
+sub init_curses {
+
+    my ($loop) = @_;
+    open( STDIN, '<', '/dev/tty' );
+
+    initscr();
+    clear();
+    noecho();
+    cbreak();    # Line buffering disabled. pass on everything
+    nodelay(1);
+
+    my $stdin_hdl;
+    $stdin_hdl = AnyEvent->io(
+        fh   => \*STDIN,
+        poll => 'r',
+        cb   => sub {
+            my $key = getch();
+            if ( $key eq 'q' ) {
+                $loop->send;
+            }
+            elsif ( $key eq 'c' ) {
+                $order_by = 'count';
+            }
+            elsif ( $key eq 'a' ) {
+                $order_by = 'average';
+            }
+            elsif ( $key eq 's' ) {
+                $order_by = 'sum';
+            }
+        }
+    );
+    return $stdin_hdl;
+}
+
+sub update_curses {
+    erase();
+    my ( $height, $width );
+    getmaxyx( $height, $width );
+    my @metrics = @{$options{metric}};
+
+    my @top_ten_count =
+      sort { $b->{$order_by} <=> $a->{$order_by} } values %elements;
+
+    attron(A_STANDOUT);
+    my @header = map { $formats{$_}->{header} } @metrics;
+    my $header_format =
+      join( ' ', map { $formats{$_}->{header_format} } @metrics );
+    my $header = sprintf( $header_format, @header );
+    my $rest = $width - length($header) - 1;
+    $header .= sprintf( " %-${rest}s", "Element" );
+    addstr($header);
+    attroff(A_STANDOUT);
+
+    for my $val ( @top_ten_count[ 0 .. $height - 2 ] ) {
+        next if !$val->{sum};
+        next if !$val->{element};
+        my @elts = map { $val->{$_} } @metrics;
+        my $line_format =
+          join( ' ', map { $formats{$_}->{data_format} } @metrics );
+        my $line = sprintf( $line_format, @elts );
+        my $rest = $width - length($line) - 1;
+        $line .= sprintf( " %-${rest}.${rest}s", $val->{element} );
+        addstr($line);
+    }
+    refresh();
+}
+
+END {
+    endwin();
+}
+
+1;
+
+__END__
