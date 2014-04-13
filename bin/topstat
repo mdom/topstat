@@ -45,6 +45,10 @@ my %formats = (
         header      => "Maximum",
         data_format => $options{format},
     },
+    last_seen => {
+        header      => "Last seen",
+        data_format => '%d',
+    },
 );
 %formats = compute_formats();
 
@@ -107,7 +111,7 @@ sub process_line {
             count   => 1,
             element => $element,
             sum     => $number,
-            average => $number
+            average => $number,
         };
     }
     else {
@@ -119,6 +123,7 @@ sub process_line {
         $elt->{average} =
           ( $elt->{average} * ( $elt->{count} - 1 ) + $number ) / $elt->{count};
     }
+    $elements->{$element}->{last_seen} = time();
     return;
 }
 
@@ -188,6 +193,9 @@ sub init_curses {
             }
             elsif ( $key eq 's' ) {
                 $order_by = 'sum';
+            }
+            elsif ( $key eq 'l' ) {
+                $order_by = 'last_seen';
             }
         }
     );
