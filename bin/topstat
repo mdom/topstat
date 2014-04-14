@@ -23,6 +23,7 @@ GetOptions( \%options, "format=s", "metric=s@", ) or pod2usage(2);
 );
 
 my $order_by = $options{metric}->[0];
+my $eof = 0;
 
 my %formats = (
     count => {
@@ -84,8 +85,8 @@ sub init_pipe {
         },
         on_eof => sub {
             my ($hdl) = @_;
+	    $eof = 1;
             update_curses()
-              ## TODO eof marker in curses
         },
         on_read => sub {
             shift->push_read(
@@ -211,6 +212,8 @@ sub update_curses {
     my @top_ten_count =
       sort { $b->{$order_by} <=> $a->{$order_by} } values %elements;
 
+    my $count = @top_ten_count;
+
     attron(A_STANDOUT);
     my @header = map { $formats{$_}->{header} } @metrics;
     my $header_format =
@@ -221,7 +224,7 @@ sub update_curses {
     addstr($header);
     attroff(A_STANDOUT);
 
-    for my $val ( @top_ten_count[ 0 .. $height - 2 ] ) {
+    for my $val ( @top_ten_count[ 0 .. $height - 3 ] ) {
         next if !$val->{sum};
         next if !$val->{element};
         my @elts = map { $val->{$_} } @metrics;
@@ -232,6 +235,12 @@ sub update_curses {
         $line .= sprintf( " %-${rest}.${rest}s", $val->{element} );
         addstr($line);
     }
+    attron(A_STANDOUT);
+    my $prefix = $eof ? "EOF    " : "READING";
+    my $status = "$prefix Count: $count";
+    addstr(sprintf("%-${width}s",$status));
+
+    attroff(A_STANDOUT);
     refresh();
 }
 
