@@ -4,9 +4,7 @@ use strict;
 use warnings;
 use Getopt::Long;
 use Curses;
-use AnyEvent;
-use AnyEvent::Handle;
-use EV;
+use IO::Select;
 
 our $VERSION = '0.01';
 
@@ -61,45 +59,30 @@ if ( -t *STDIN ) {
 ## from the dupped stdin
 
 open( my $pipe, '<&', *STDIN ) or die "$!\n";
+open( STDIN, '<', '/dev/tty' );
 
-my $loop = AnyEvent->condvar;
+my $select = IO::Select->new();
+$select->add($pipe,\*STDIN);
 
-my $timer = AnyEvent->timer( interval => 1.5, cb => sub { update_curses() } );
+$SIG{ALRM} = sub {  update_curses(); alarm 2; };
+alarm 2;
 
-my $stdin_hdl = init_curses($loop);
-my $pipe_hdl  = init_pipe($pipe);
+init_curses();
 
-if ( $loop->recv ) {
-    exit 0;
+while (1) {
+	my @ready = $select->can_read;
+	foreach my $fh ( @ready ) {
+		if ( $fh == \*STDIN ) {
+			process_stdin();
+		}
+		elsif ( $fh == $pipe ) {
+			my $line = <$pipe>;
+			process_line($line,\%elements);
+		}
+	}
 }
 
-sub init_pipe {
-    my ($pipe) = @_;
-    $pipe_hdl = AnyEvent::Handle->new(
-        fh       => $pipe,
-        on_error => sub {
-            my ( $hdl, $fatal, $msg ) = @_;
-            warn "$msg\n";
-            $hdl->destroy;
-            $loop->send;
-        },
-        on_eof => sub {
-            my ($hdl) = @_;
-	    $eof = 1;
-            update_curses()
-        },
-        on_read => sub {
-            shift->push_read(
-                line => sub {
-                    my ( $hdl, $line ) = @_;
-                    process_line( $line, \%elements );
-                    return 0;
-                }
-            );
-        }
-    );
-    return $pipe_hdl;
-}
+exit 0;
 
 sub process_line {
     my ( $line, $elements ) = @_;
@@ -167,40 +150,34 @@ sub compute_formats {
 }
 
 sub init_curses {
-
-    my ($loop) = @_;
-    open( STDIN, '<', '/dev/tty' );
-
     initscr();
     clear();
     noecho();
     cbreak();    # Line buffering disabled. pass on everything
     nodelay(1);
+}
 
-    my $stdin_hdl;
-    $stdin_hdl = AnyEvent->io(
-        fh   => \*STDIN,
-        poll => 'r',
-        cb   => sub {
-            my $key = getch();
-            if ( $key eq 'q' ) {
-                $loop->send;
-            }
-            elsif ( $key eq 'c' ) {
-                $order_by = 'count';
-            }
-            elsif ( $key eq 'a' ) {
-                $order_by = 'average';
-            }
-            elsif ( $key eq 's' ) {
-                $order_by = 'sum';
-            }
-            elsif ( $key eq 'l' ) {
-                $order_by = 'last_seen';
-            }
-        }
-    );
-    return $stdin_hdl;
+sub process_stdin {
+    my $key = getch();
+    if ( $key eq 'q' ) {
+        exit 0;
+    }
+    elsif ( $key eq 'c' ) {
+        $order_by = 'count';
+    }
+    elsif ( $key eq 'a' ) {
+        $order_by = 'average';
+    }
+    elsif ( $key eq 's' ) {
+        $order_by = 'sum';
+    }
+    elsif ( $key eq 'l' ) {
+        $order_by = 'last_seen';
+    }
+    elsif ( $key eq 'C' ) {
+        close($pipe);
+    }
+    return;
 }
 
 sub update_curses {

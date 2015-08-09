@@ -9,7 +9,6 @@ my $builder = Module::Build->new(
     configure_requires => {
         'Module::Build' => 0,
         'Curses'        => 0,
-        'AnyEvent'      => 0,
         'Getopt::Long'  => 0,
         'Pod::Usage'    => 0,
     },
