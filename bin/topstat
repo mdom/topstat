@@ -13,8 +13,10 @@ my $formats;
 
 my %options = (
 	delimiter => ' ',
+	interval  => 2,
 );
-GetOptions( \%options, "format=s", "metric=s@", "delimiter=s" ) or pod2usage(2);
+GetOptions( \%options, "format=s", "metric=s@", "delimiter=s", "interval=i" )
+  or pod2usage(2);
 
 %options = (
     format => '%10.2f',
@@ -66,8 +68,8 @@ open( STDIN, '<', '/dev/tty' );
 my $select = IO::Select->new();
 $select->add($pipe,\*STDIN);
 
-$SIG{ALRM} = sub {  update_curses(); alarm 2; };
-alarm 2;
+$SIG{ALRM} = sub { update_curses(); alarm $options{interval}; };
+alarm $options{interval};
 
 init_curses();
 
