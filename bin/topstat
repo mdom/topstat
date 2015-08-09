@@ -44,6 +44,10 @@ my %formats = (
         header      => "Maximum",
         data_format => $options{format},
     },
+    decay => {
+        header      => "Decay",
+        data_format => $options{format},
+    },
     last_seen => {
         header      => "Last seen",
         data_format => '%d',
@@ -71,6 +75,7 @@ my $n = 0;
 sub tick {
     $n++;
     update_curses()  if $n % $options{interval} == 0;
+    decay_elements(\%elements) if $n % 10 == 0;
 }
 
 init_curses();
@@ -102,11 +107,13 @@ sub process_line {
             element => $element,
             sum     => $number,
             average => $number,
+	    decay   => 1,
         };
     }
     else {
         my $elt = $elements->{$element};
         $elt->{count}++;
+        $elt->{decay}++;
         $elt->{sum} += $number;
         $elt->{max} = $elt->{max} < $number ? $number : $elt->{max};
         $elt->{min} = $elt->{min} > $number ? $number : $elt->{min};
@@ -115,6 +122,14 @@ sub process_line {
     }
     $elements->{$element}->{last_seen} = time();
     return;
+}
+
+sub decay_elements {
+	my $elements = shift;
+	for my $elt ( values %$elements ) {
+		$elt->{decay} = (1.0/3.0 - $elt->{decay}) / 60;
+	}
+	return;
 }
 
 sub compute_formats {
@@ -259,9 +274,9 @@ that line. Number and identifier are split by consecutive whitespace.
 
 =item -m, --metric METRIC
 
-Selects what metrics to display and in what order. Possible values are
-I<sum>, I<average>, I<count>, I<last-seen>, I<min> and I<max>. Defaults
-to I<count>.
+Selects what metrics to display and in what order. Possible values
+are I<sum>, I<average>, I<count>, I<last-seen>, I<decay>, I<min> and
+I<max>. Defaults to I<count>.
 
 =item -i, --interval INTERVAL
 

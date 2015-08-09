@@ -22,9 +22,9 @@ that line. Number and identifier are split by consecutive whitespace.
 
 =item -m, --metric METRIC
 
-Selects what metrics to display and in what order. Possible values are
-I<sum>, I<average>, I<count>, I<last-seen>, I<min> and I<max>. Defaults
-to I<count>.
+Selects what metrics to display and in what order. Possible values
+are I<sum>, I<average>, I<count>, I<last-seen>, I<decay>, I<min> and
+I<max>. Defaults to I<count>.
 
 =item -i, --interval INTERVAL
 
