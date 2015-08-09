@@ -262,7 +262,7 @@ It is possible to install this script via perl normal install routines.
 Or you can just copy the script somewhere in your path and install the
 dependencies via your normal package system. For example, in Debian:
 
-  apt-get install libcurses-perl libanyevent-perl
+  apt-get install libcurses-perl
 
 =head1 COPYRIGHT AND LICENSE
 
