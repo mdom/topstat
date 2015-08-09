@@ -251,6 +251,24 @@ present them in a top-like interface. Every line must contain a number
 as first element, the rest of the line is interpreted as identifier for
 that line. Number and identifier are split by consecutive whitespace.
 
+=head1 OPTIONS
+
+=over 4 
+
+=item -m, --metric METRIC
+
+Selects what metrics to display and in what order. Possible values are
+I<sum>, I<average>, I<count>, I<last-seen>, I<min> and I<max>. Defaults
+to I<count>.
+
+=item -i, --interval INTERVAL
+
+Delay between screen updates in seconds. Default to 2.
+
+=item -d, --delimiter DELIMITER
+
+Use DELIMITER instead of consecutive whitespace as delimiter of fields.
+
 =head1 INSTALLATION
 
 It is possible to install this script via perl normal install routines. 
