@@ -11,8 +11,10 @@ our $VERSION = '0.01';
 my %elements;
 my $formats;
 
-my %options;
-GetOptions( \%options, "format=s", "metric=s@", ) or pod2usage(2);
+my %options = (
+	delimiter => ' ',
+);
+GetOptions( \%options, "format=s", "metric=s@", "delimiter=s" ) or pod2usage(2);
 
 %options = (
     format => '%10.2f',
@@ -86,7 +88,7 @@ exit 0;
 
 sub process_line {
     my ( $line, $elements ) = @_;
-    my ( $element, $number ) = split( ' ', $line );
+    my ( $element, $number ) = split( $options{delimiter}, $line );
     return if !defined($element) || !defined($number);
     if ( !exists $elements->{$element} ) {
         $elements->{$element} = {
