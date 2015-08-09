@@ -64,8 +64,14 @@ open( STDIN, '<', '/dev/tty' );
 my $select = IO::Select->new();
 $select->add($pipe,\*STDIN);
 
-$SIG{ALRM} = sub { update_curses(); alarm $options{interval}; };
-alarm $options{interval};
+$SIG{ALRM} = sub { tick(); alarm 1; };
+alarm 1;
+
+my $n = 0;
+sub tick {
+    $n++;
+    update_curses()  if $n % $options{interval} == 0;
+}
 
 init_curses();
 
