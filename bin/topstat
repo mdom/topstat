@@ -14,15 +14,11 @@ my $formats;
 my %options = (
 	delimiter => ' ',
 	interval  => 2,
+	format => '%10.2f',
+	metric => [ 'count', 'average', 'sum' ],
 );
 GetOptions( \%options, "format=s", "metric=s@", "delimiter=s", "interval=i" )
   or pod2usage(2);
-
-%options = (
-    format => '%10.2f',
-    metric => [ 'count', 'average', 'sum' ],
-    %options,
-);
 
 my $order_by = $options{metric}->[0];
 my $eof = 0;
