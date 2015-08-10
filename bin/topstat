@@ -76,7 +76,7 @@ my $n = 0;
 sub tick {
     $n++;
     update_curses()  if $n % $options{interval} == 0;
-    decay_elements(\%elements) if $n % 10 == 0;
+    decay_elements(\%elements) if $n > 60;
 }
 
 init_curses();
