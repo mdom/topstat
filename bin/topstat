@@ -220,13 +220,14 @@ sub update_curses {
 
     my $count = @top_ten_count;
 
-    attron(A_STANDOUT);
     my @header = map { $formats{$_}->{header} } @metrics;
     my $header_format =
       join( ' ', map { $formats{$_}->{header_format} } @metrics );
     my $header = sprintf( $header_format, @header );
     my $rest = $width - length($header) - 1;
     $header .= sprintf( " %-${rest}s", "Element" );
+
+    attron(A_STANDOUT);
     addstr($header);
     attroff(A_STANDOUT);
 
@@ -241,12 +242,13 @@ sub update_curses {
         $line .= sprintf( " %-${rest}.${rest}s", $val->{element} );
         addstr($line);
     }
-    attron(A_STANDOUT);
     my $prefix = $eof ? "EOF    " : "READING";
     my $status = "$prefix Count: $count";
-    addstr(sprintf("%-${width}s",$status));
 
+    attron(A_STANDOUT);
+    addstr(sprintf("%-${width}s",$status));
     attroff(A_STANDOUT);
+
     refresh();
 }
 
