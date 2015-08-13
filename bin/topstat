@@ -88,8 +88,15 @@ while (1) {
 			process_stdin();
 		}
 		elsif ( $fh == $pipe ) {
-			my $line = <$pipe>;
-			process_line($line,\%elements);
+			if ( $fh->eof ) {
+				$eof = 1;
+				$select->remove($fh);
+				$fh->close;
+			}
+			else {
+				my $line = <$pipe>;
+				process_line($line,\%elements);
+			}
 		}
 	}
 }
