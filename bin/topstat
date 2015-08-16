@@ -194,18 +194,23 @@ sub process_stdin {
     }
     elsif ( $key eq 'c' ) {
         $order_by = 'count';
+	update_curses();
     }
     elsif ( $key eq 'a' ) {
         $order_by = 'average';
+	update_curses();
     }
     elsif ( $key eq 's' ) {
         $order_by = 'sum';
+	update_curses();
     }
     elsif ( $key eq 'l' ) {
         $order_by = 'last_seen';
+	update_curses();
     }
     elsif ( $key eq 'C' ) {
         close($pipe);
+	update_curses();
     }
     return;
 }
