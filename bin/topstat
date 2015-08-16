@@ -89,10 +89,8 @@ while (1) {
 			process_stdin();
 		}
 		elsif ( $fh == $pipe ) {
-			if ( $fh->eof ) {
-				$eof = 1;
-				$select->remove($fh);
-				$fh->close;
+			if ( $pipe->eof ) {
+				close_pipe();
 			}
 			else {
 				my $line = <$pipe>;
@@ -103,6 +101,12 @@ while (1) {
 }
 
 exit 0;
+
+sub close_pipe {
+	$eof = 1;
+	$select->remove($pipe);
+	$pipe->close;
+}
 
 sub process_line {
     my ( $line, $elements ) = @_;
@@ -209,7 +213,7 @@ sub process_stdin {
 	update_curses();
     }
     elsif ( $key eq 'C' ) {
-        close($pipe);
+        close_pipe();
 	update_curses();
     }
     return;
