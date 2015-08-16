@@ -228,9 +228,7 @@ sub update_curses {
     my $rest = $width - length($header) - 1;
     $header .= sprintf( " %-${rest}s", "Element" );
 
-    attron(A_STANDOUT);
-    addstring($header);
-    attroff(A_STANDOUT);
+    highlight($header);
 
     for my $val ( @top_ten_count[ 0 .. $height - 3 ] ) {
         next if !$val->{sum};
@@ -245,12 +243,15 @@ sub update_curses {
     }
     my $prefix = $eof ? "EOF    " : "READING";
     my $status = "$prefix Count: $count";
-
-    attron(A_STANDOUT);
-    addstring(sprintf("%-${width}s",$status));
-    attroff(A_STANDOUT);
+    highlight(sprintf("%-${width}s",$status));
 
     refresh();
+}
+
+sub highlight {
+    attron(A_STANDOUT);
+    addstring($_[0]);
+    attroff(A_STANDOUT);
 }
 
 END {
