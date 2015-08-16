@@ -5,6 +5,7 @@ use warnings;
 use Getopt::Long;
 use Curses;
 use IO::Select;
+use Encode;
 
 our $VERSION = '0.01';
 
@@ -105,7 +106,7 @@ exit 0;
 
 sub process_line {
     my ( $line, $elements ) = @_;
-    my ( $element, $number ) = split( $options{delimiter}, $line );
+    my ( $element, $number ) = split( $options{delimiter}, decode_utf8($line) );
     return if !defined($element) || !defined($number);
     if ( !exists $elements->{$element} ) {
         $elements->{$element} = {
@@ -228,7 +229,7 @@ sub update_curses {
     $header .= sprintf( " %-${rest}s", "Element" );
 
     attron(A_STANDOUT);
-    addstr($header);
+    addstring($header);
     attroff(A_STANDOUT);
 
     for my $val ( @top_ten_count[ 0 .. $height - 3 ] ) {
@@ -240,13 +241,13 @@ sub update_curses {
         my $line = sprintf( $line_format, @elts );
         my $rest = $width - length($line) - 1;
         $line .= sprintf( " %-${rest}.${rest}s", $val->{element} );
-        addstr($line);
+        addstring($line);
     }
     my $prefix = $eof ? "EOF    " : "READING";
     my $status = "$prefix Count: $count";
 
     attron(A_STANDOUT);
-    addstr(sprintf("%-${width}s",$status));
+    addstring(sprintf("%-${width}s",$status));
     attroff(A_STANDOUT);
 
     refresh();
