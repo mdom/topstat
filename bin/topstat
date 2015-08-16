@@ -13,9 +13,9 @@ my %elements;
 my $formats;
 
 my %options = (
-	delimiter => ' ',
-	interval  => 2,
-	format => '%10.2f',
+    delimiter => ' ',
+    interval  => 2,
+    format    => '%10.2f',
 );
 GetOptions( \%options, "format=s", "metric=s@", "delimiter=s", "interval=i" )
   or pod2usage(2);
@@ -23,7 +23,7 @@ GetOptions( \%options, "format=s", "metric=s@", "delimiter=s", "interval=i" )
 $options{metric} ||= [ 'count', 'average', 'sum' ];
 
 my $order_by = $options{metric}->[0];
-my $eof = 0;
+my $eof      = 0;
 
 my %formats = (
     count => {
@@ -68,44 +68,45 @@ open( my $pipe, '<&', *STDIN ) or die "$!\n";
 open( STDIN, '<', '/dev/tty' );
 
 my $select = IO::Select->new();
-$select->add($pipe,\*STDIN);
+$select->add( $pipe, \*STDIN );
 
 $SIG{ALRM} = sub { tick(); alarm 1; };
 alarm 1;
 
 my $n = 0;
+
 sub tick {
     $n++;
-    update_curses()  if $n % $options{interval} == 0;
-    decay_elements(\%elements) if $n > 60;
+    update_curses() if $n % $options{interval} == 0;
+    decay_elements( \%elements ) if $n > 60;
 }
 
 init_curses();
 
 while (1) {
-	my @ready = $select->can_read;
-	foreach my $fh ( @ready ) {
-		if ( $fh == \*STDIN ) {
-			process_stdin();
-		}
-		elsif ( $fh == $pipe ) {
-			if ( $pipe->eof ) {
-				close_pipe();
-			}
-			else {
-				my $line = <$pipe>;
-				process_line($line,\%elements);
-			}
-		}
-	}
+    my @ready = $select->can_read;
+    foreach my $fh (@ready) {
+        if ( $fh == \*STDIN ) {
+            process_stdin();
+        }
+        elsif ( $fh == $pipe ) {
+            if ( $pipe->eof ) {
+                close_pipe();
+            }
+            else {
+                my $line = <$pipe>;
+                process_line( $line, \%elements );
+            }
+        }
+    }
 }
 
 exit 0;
 
 sub close_pipe {
-	$eof = 1;
-	$select->remove($pipe);
-	$pipe->close;
+    $eof = 1;
+    $select->remove($pipe);
+    $pipe->close;
 }
 
 sub process_line {
@@ -120,7 +121,7 @@ sub process_line {
             element => $element,
             sum     => $number,
             average => $number,
-	    decay   => 1,
+            decay   => 1,
         };
     }
     else {
@@ -138,11 +139,11 @@ sub process_line {
 }
 
 sub decay_elements {
-	my $elements = shift;
-	for my $elt ( values %$elements ) {
-		$elt->{decay} = (1.0/3.0 - $elt->{decay}) / 60;
-	}
-	return;
+    my $elements = shift;
+    for my $elt ( values %$elements ) {
+        $elt->{decay} = ( 1.0 / 3.0 - $elt->{decay} ) / 60;
+    }
+    return;
 }
 
 sub compute_formats {
@@ -198,23 +199,23 @@ sub process_stdin {
     }
     elsif ( $key eq 'c' ) {
         $order_by = 'count';
-	update_curses();
+        update_curses();
     }
     elsif ( $key eq 'a' ) {
         $order_by = 'average';
-	update_curses();
+        update_curses();
     }
     elsif ( $key eq 's' ) {
         $order_by = 'sum';
-	update_curses();
+        update_curses();
     }
     elsif ( $key eq 'l' ) {
         $order_by = 'last_seen';
-	update_curses();
+        update_curses();
     }
     elsif ( $key eq 'C' ) {
         close_pipe();
-	update_curses();
+        update_curses();
     }
     return;
 }
@@ -251,26 +252,28 @@ sub update_curses {
         addstring($line);
     }
     my $running_time = format_seconds($n);
-    my $prefix = $eof ? "EOF    " : "READING";
-    my $status = "$prefix Count: $count Time: $running_time";
-    move($height-1,0);
-    highlight(sprintf("%-${width}s",$status));
+    my $prefix       = $eof ? "EOF    " : "READING";
+    my $status       = "$prefix Count: $count Time: $running_time";
+    move( $height - 1, 0 );
+    highlight( sprintf( "%-${width}s", $status ) );
 
     refresh();
 }
 
 sub format_seconds {
-	my $t = shift;
-	my $s=$t % 60; $t=($t-$s)/60;
-	my $m=$t % 60; $t=($t-$m)/60;
-	my $h=$t % 24;
-	my $d=($t-$h)/24;
-	return sprintf "%03d:%02d:%02d:%02d", $d,$h,$m,$s;
+    my $t = shift;
+    my $s = $t % 60;
+    $t = ( $t - $s ) / 60;
+    my $m = $t % 60;
+    $t = ( $t - $m ) / 60;
+    my $h = $t % 24;
+    my $d = ( $t - $h ) / 24;
+    return sprintf "%03d:%02d:%02d:%02d", $d, $h, $m, $s;
 }
 
 sub highlight {
     attron(A_STANDOUT);
-    addstring($_[0]);
+    addstring( $_[0] );
     attroff(A_STANDOUT);
 }
 
