@@ -243,6 +243,7 @@ sub update_curses {
     }
     my $prefix = $eof ? "EOF    " : "READING";
     my $status = "$prefix Count: $count";
+    move($height-1,0);
     highlight(sprintf("%-${width}s",$status));
 
     refresh();
