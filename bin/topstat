@@ -250,12 +250,22 @@ sub update_curses {
         $line .= sprintf( " %-${rest}.${rest}s", $val->{element} );
         addstring($line);
     }
+    my $running_time = format_seconds($n);
     my $prefix = $eof ? "EOF    " : "READING";
-    my $status = "$prefix Count: $count";
+    my $status = "$prefix Count: $count Time: $running_time";
     move($height-1,0);
     highlight(sprintf("%-${width}s",$status));
 
     refresh();
+}
+
+sub format_seconds {
+	my $t = shift;
+	my $s=$t % 60; $t=($t-$s)/60;
+	my $m=$t % 60; $t=($t-$m)/60;
+	my $h=$t % 24;
+	my $d=($t-$h)/24;
+	return sprintf "%03d:%02d:%02d:%02d", $d,$h,$m,$s;
 }
 
 sub highlight {
