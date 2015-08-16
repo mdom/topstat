@@ -183,7 +183,7 @@ sub init_curses {
     initscr();
     clear();
     noecho();
-    cbreak();    # Line buffering disabled. pass on everything
+    raw();
     nodelay(1);
 }
 
