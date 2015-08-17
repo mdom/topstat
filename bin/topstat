@@ -249,7 +249,6 @@ sub get_lines {
       sort { $b->{$order_by} <=> $a->{$order_by} } values %elements;
     my @lines;
     for my $val ( @top_ten_count[ 0 .. $lines - 1 ] ) {
-        next if !$val->{sum};
         next if !$val->{element};
         my @elts = map { $val->{$_} } @metrics;
         my $line_format =
