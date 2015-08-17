@@ -18,10 +18,12 @@ my %options = (
     format    => '%10.2f',
     lines     => 10,
     split     => 1,
+    update    => 1,
 );
 GetOptions(
     \%options,     "batch|1!",   "format=s", "metric=s@",
-    "delimiter=s", "interval=i", "lines=i",  "split!"
+    "delimiter=s", "interval=i", "lines=i",  "split!",
+    "update!",
 ) or pod2usage(2);
 
 $options{metric} ||= [ 'count', 'average', 'sum' ];
@@ -85,7 +87,9 @@ my $n = 0;
 
 sub tick {
     $n++;
-    update_screen() if $n % $options{interval} == 0;
+    if ( $options{update} ) {
+	    update_screen() if $n % $options{interval} == 0;
+    }
     decay_elements( \%elements ) if $n > 60;
 }
 
@@ -118,6 +122,9 @@ sub close_pipe {
     $eof = 1;
     $select->remove($pipe);
     $pipe->close;
+    if ( ! $options{update} ) {
+	    update_screen();
+    }
 }
 
 sub process_line {
