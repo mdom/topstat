@@ -104,6 +104,7 @@ while (1) {
             }
             else {
                 my $line = <$pipe>;
+                chomp($line);
                 process_line( $line, \%elements );
             }
         }
