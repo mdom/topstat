@@ -275,7 +275,7 @@ sub update_stdout {
     endwin();
     print get_header($width);
     my @lines = get_lines( $options{lines}, $width );
-    print for @lines;
+    print encode_utf8($_) for @lines;
     print "\n\n";
     return;
 }
