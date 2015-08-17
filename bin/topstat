@@ -17,10 +17,11 @@ my %options = (
     interval  => 2,
     format    => '%10.2f',
     lines     => 10,
+    split     => 1,
 );
 GetOptions(
     \%options,     "batch|1!",   "format=s", "metric=s@",
-    "delimiter=s", "interval=i", "lines=i"
+    "delimiter=s", "interval=i", "lines=i",  "split!"
 ) or pod2usage(2);
 
 $options{metric} ||= [ 'count', 'average', 'sum' ];
@@ -121,7 +122,14 @@ sub close_pipe {
 
 sub process_line {
     my ( $line, $elements ) = @_;
-    my ( $element, $number ) = split( $options{delimiter}, decode_utf8($line) );
+    my ( $element, $number );
+    if ( $options{split} ) {
+        ( $element, $number ) =
+          split( $options{delimiter}, decode_utf8($line) );
+    }
+    else {
+        ( $element, $number ) = ( decode_utf8($line), 0 );
+    }
     return if !defined($element) || !defined($number);
     if ( !exists $elements->{$element} ) {
         $elements->{$element} = {
