@@ -226,11 +226,6 @@ sub update_curses {
     getmaxyx( $height, $width );
     my @metrics = @{ $options{metric} };
 
-    my @top_ten_count =
-      sort { $b->{$order_by} <=> $a->{$order_by} } values %elements;
-
-    my $count = @top_ten_count;
-
     my @header = map { $formats{$_}->{header} } @metrics;
     my $header_format =
       join( ' ', map { $formats{$_}->{header_format} } @metrics );
@@ -239,6 +234,11 @@ sub update_curses {
     $header .= sprintf( " %-${rest}s", "Element" );
 
     highlight($header);
+
+    my @top_ten_count =
+      sort { $b->{$order_by} <=> $a->{$order_by} } values %elements;
+
+    my $count = @top_ten_count;
 
     for my $val ( @top_ten_count[ 0 .. $height - 3 ] ) {
         next if !$val->{sum};
