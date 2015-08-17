@@ -220,37 +220,49 @@ sub process_stdin {
     return;
 }
 
-sub update_curses {
-    erase();
-    my ( $height, $width );
-    getmaxyx( $height, $width );
+sub get_header {
+    my ($width) = @_;
     my @metrics = @{ $options{metric} };
-
     my @header = map { $formats{$_}->{header} } @metrics;
     my $header_format =
       join( ' ', map { $formats{$_}->{header_format} } @metrics );
     my $header = sprintf( $header_format, @header );
     my $rest = $width - length($header) - 1;
     $header .= sprintf( " %-${rest}s", "Element" );
+    return $header;
+}
 
-    highlight($header);
-
+sub get_lines {
+    my ( $lines, $columns ) = @_;
+    my @metrics = @{ $options{metric} };
     my @top_ten_count =
       sort { $b->{$order_by} <=> $a->{$order_by} } values %elements;
-
-    my $count = @top_ten_count;
-
-    for my $val ( @top_ten_count[ 0 .. $height - 3 ] ) {
+    my @lines;
+    for my $val ( @top_ten_count[ 0 .. $lines - 1 ] ) {
         next if !$val->{sum};
         next if !$val->{element};
         my @elts = map { $val->{$_} } @metrics;
         my $line_format =
           join( ' ', map { $formats{$_}->{data_format} } @metrics );
         my $line = sprintf( $line_format, @elts );
-        my $rest = $width - length($line) - 1;
+        my $rest = $columns - length($line) - 1;
         $line .= sprintf( " %-${rest}.${rest}s", $val->{element} );
-        addstring($line);
+        push @lines, $line;
     }
+    return @lines;
+}
+
+sub update_curses {
+    erase();
+    my ( $height, $width );
+    getmaxyx( $height, $width );
+
+    highlight( get_header($width) );
+
+    my @lines = get_lines( $height - 2, $width );
+    my $count = @lines;
+    addstring($_) for @lines;
+
     my $running_time = format_seconds($n);
     my $prefix       = $eof ? "EOF    " : "READING";
     my $status       = "$prefix Count: $count Time: $running_time";
