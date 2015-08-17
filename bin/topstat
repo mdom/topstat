@@ -64,6 +64,10 @@ if ( -t *STDIN ) {
     die "$0: stdin has to be connected to a file or pipe. Exiting.\n";
 }
 
+if ( !-t *STDOUT ) {
+    $options{batch} = 1;
+}
+
 ## dup stdin so curses can get stdin and we can process lines
 ## from the dupped stdin
 
