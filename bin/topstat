@@ -16,9 +16,12 @@ my %options = (
     delimiter => ' ',
     interval  => 2,
     format    => '%10.2f',
+    lines     => 10,
 );
-GetOptions( \%options, "format=s", "metric=s@", "delimiter=s", "interval=i" )
-  or pod2usage(2);
+GetOptions(
+    \%options,     "batch|1!",   "format=s", "metric=s@",
+    "delimiter=s", "interval=i", "lines=i"
+) or pod2usage(2);
 
 $options{metric} ||= [ 'count', 'average', 'sum' ];
 
@@ -77,11 +80,13 @@ my $n = 0;
 
 sub tick {
     $n++;
-    update_curses() if $n % $options{interval} == 0;
+    update_screen() if $n % $options{interval} == 0;
     decay_elements( \%elements ) if $n > 60;
 }
 
-init_curses();
+if ( !$options{batch} ) {
+    init_curses();
+}
 
 while (1) {
     my @ready = $select->can_read;
@@ -252,6 +257,28 @@ sub get_lines {
     return @lines;
 }
 
+sub update_screen {
+    if ( $options{batch} ) {
+        update_stdout();
+    }
+    else {
+        update_curses();
+    }
+    return;
+}
+
+sub update_stdout {
+    my ( $height, $width );
+    initscr();
+    getmaxyx( $height, $width );
+    endwin();
+    print get_header($width);
+    my @lines = get_lines( $options{lines}, $width );
+    print for @lines;
+    print "\n\n";
+    return;
+}
+
 sub update_curses {
     erase();
     my ( $height, $width );
@@ -290,7 +317,9 @@ sub highlight {
 }
 
 END {
-    endwin();
+    if ( !$options{batch} ) {
+        endwin();
+    }
 }
 
 1;
