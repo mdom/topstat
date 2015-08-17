@@ -260,6 +260,7 @@ sub get_lines {
 sub update_screen {
     if ( $options{batch} ) {
         update_stdout();
+        exit 0 if $eof;
     }
     else {
         update_curses();
