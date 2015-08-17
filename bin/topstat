@@ -269,10 +269,7 @@ sub update_screen {
 }
 
 sub update_stdout {
-    my ( $height, $width );
-    initscr();
-    getmaxyx( $height, $width );
-    endwin();
+    my $width = qx(tput cols);
     print get_header($width);
     my @lines = get_lines( $options{lines}, $width );
     print encode_utf8($_) for @lines;
