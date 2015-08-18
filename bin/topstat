@@ -3,7 +3,6 @@
 use strict;
 use warnings;
 use Getopt::Long;
-use Curses;
 use IO::Select;
 use Encode;
 
@@ -27,6 +26,14 @@ GetOptions(
 ) or pod2usage(2);
 
 $options{metric} ||= [ 'count', 'average', 'sum' ];
+
+if ( ! $options{batch} ) {
+	eval { require Curses; Curses->import };
+	if ( $@ ) {
+		warn "Can't load Curses, falling back to batch mode.\n";
+		$options{batch} = 1;
+	}
+}
 
 my $order_by = $options{metric}->[0];
 my $eof      = 0;
@@ -328,9 +335,9 @@ sub format_seconds {
 }
 
 sub highlight {
-    attron(A_STANDOUT);
+    attron(A_STANDOUT());
     addstring( $_[0] );
-    attroff(A_STANDOUT);
+    attroff(A_STANDOUT());
 }
 
 END {
