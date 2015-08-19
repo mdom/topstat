@@ -16,9 +16,10 @@ my %options = (
     interval  => 2,
     format    => '%10.2f',
     lines     => 10,
-    split     => 1,
+    split     => 0,
     update    => 1,
 );
+
 GetOptions(
     \%options,     "batch|1!",   "format=s", "metric=s@",
     "delimiter=s", "interval=i", "lines=i",  "split!",
