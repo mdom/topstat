@@ -5,6 +5,7 @@ use warnings;
 use Getopt::Long;
 use IO::Select;
 use Encode;
+use version 0.77;
 
 our $VERSION = '0.01';
 
@@ -33,12 +34,18 @@ else {
 	$options{metric} ||= [ 'decay' ];
 }
 
-if ( ! $options{batch} ) {
-	eval { require Curses; Curses->import };
-	if ( $@ ) {
-		warn "Can't load Curses, falling back to batch mode.\n";
-		$options{batch} = 1;
-	}
+if ( !$options{batch} ) {
+    eval { require Curses; Curses->import };
+    if ($@) {
+        warn "Can't load Curses, falling back to batch mode.\n";
+        $options{batch} = 1;
+    }
+    else {
+	no warnings qw(once redefine);
+        if ( version->parse($Curses::VERSION) < version->parse('1.29') ) {
+            *addstring = \&addstr;
+        }
+    }
 }
 
 my $order_by = $options{metric}->[0];
