@@ -26,7 +26,12 @@ GetOptions(
     "update!",
 ) or pod2usage(2);
 
-$options{metric} ||= [ 'count', 'average', 'sum' ];
+if ( $options{'split'} ) {
+	$options{metric} ||= [ 'count', 'average', 'sum' ];
+}
+else {
+	$options{metric} ||= [ 'decay' ];
+}
 
 if ( ! $options{batch} ) {
 	eval { require Curses; Curses->import };
