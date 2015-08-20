@@ -162,7 +162,7 @@ sub process_line {
     my ( $element, $number );
     if ( $options{split} ) {
         ( $element, $number ) =
-          split( $options{delimiter}, decode_utf8($line) );
+          split( $options{delimiter}, decode_utf8($line), 2 );
     }
     else {
         ( $element, $number ) = ( decode_utf8($line), 0 );
