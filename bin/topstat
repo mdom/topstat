@@ -2,6 +2,7 @@
 
 use strict;
 use warnings;
+use feature 'state';
 use Getopt::Long;
 use IO::Select;
 use Encode;
@@ -124,19 +125,28 @@ while (1) {
             process_stdin();
         }
         elsif ( $fh == $pipe ) {
-            if ( $pipe->eof ) {
-                close_pipe();
-            }
-            else {
-                my $line = <$pipe>;
-                chomp($line);
-                process_line( $line, \%elements );
-            }
+            process_pipe($pipe);
         }
     }
 }
 
 exit 0;
+
+sub process_pipe {
+    my ($pipe) = @_;
+    state $buffer = '';
+    my $bytes = sysread( $pipe, $buffer, 64 * 1024, length($buffer) );
+    if ( !defined $bytes ) {
+        die "Error reading from pipe: $!\n";
+    }
+    if ( !$bytes ) {
+        close_pipe();
+    }
+    while ( $buffer =~ s/^(.*)\n// ) {
+        process_line( $1, \%elements );
+    }
+    return;
+}
 
 sub close_pipe {
     $eof = 1;
