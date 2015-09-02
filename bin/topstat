@@ -195,8 +195,11 @@ sub process_line {
 
 sub decay_elements {
     my $elements = shift;
-    for my $elt ( values %$elements ) {
-        $elt->{decay} = ( 1.0 / 3.0 - $elt->{decay} ) / 60;
+    while ( my ( $key, $value ) = each %$elements ) {
+        $value->{decay} = ( 1.0 / 3.0 - $value->{decay} ) / 60;
+        if ( $value->{decay} <= 0 ) {
+            delete $elements->{$key};
+        }
     }
     return;
 }
