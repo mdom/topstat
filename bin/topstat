@@ -20,12 +20,13 @@ my %options = (
     lines     => 10,
     split     => 0,
     update    => 1,
+    purge     => 1,
 );
 
 GetOptions(
     \%options,     "batch|1!",   "format=s", "metric=s@",
     "delimiter=s", "interval=i", "lines=i",  "split!",
-    "update!",
+    "update!",     "purge!"
 ) or pod2usage(2);
 
 if ( $options{'split'} ) {
@@ -197,7 +198,7 @@ sub decay_elements {
     my $elements = shift;
     while ( my ( $key, $value ) = each %$elements ) {
         $value->{decay} = ( 1.0 / 3.0 - $value->{decay} ) / 60;
-        if ( $value->{decay} <= 0 ) {
+        if ( $options{purge} && $value->{decay} <= 0 ) {
             delete $elements->{$key};
         }
     }
