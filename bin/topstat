@@ -12,6 +12,7 @@ our $VERSION = '0.01';
 
 my %elements;
 my $formats;
+my $lines_read;
 
 my %options = (
     delimiter => ' ',
@@ -160,6 +161,7 @@ sub close_pipe {
 
 sub process_line {
     my ( $line, $elements ) = @_;
+    $lines_read++;
     my ( $element, $number );
     if ( $options{split} ) {
         ( $element, $number ) =
@@ -340,12 +342,11 @@ sub update_curses {
     highlight( get_header($width) );
 
     my @lines = get_lines( $height - 2, $width );
-    my $count = @lines;
     addstring($_) for @lines;
 
     my $running_time = format_seconds($n);
     my $prefix       = $eof ? "EOF    " : "READING";
-    my $status       = "$prefix Count: $count Time: $running_time";
+    my $status       = "$prefix Lines: $lines_read Time: $running_time";
     move( $height - 1, 0 );
     highlight( sprintf( "%-${width}s", $status ) );
 
