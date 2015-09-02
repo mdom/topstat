@@ -302,9 +302,11 @@ sub get_lines {
         my @elts = map { $val->{$_} } @metrics;
         my $line_format =
           join( ' ', map { $formats{$_}->{data_format} } @metrics );
-        my $line = sprintf( $line_format, @elts );
-        my $rest = $columns - length($line) - 1;
-        $line .= sprintf( " %-${rest}.${rest}s", $val->{element} );
+        my $line    = sprintf( $line_format, @elts );
+        my $rest    = $columns - length($line) - 1;
+        my $element = $val->{element};
+        $element =~ s/\t/    /g;
+        $line .= sprintf( " %-${rest}.${rest}s", $element );
         push @lines, $line;
     }
     return @lines;
