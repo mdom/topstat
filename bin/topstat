@@ -345,8 +345,9 @@ sub update_curses {
     addstring($_) for @lines;
 
     my $running_time = format_seconds($n);
+    my $elements_seen = keys %elements;
     my $prefix       = $eof ? "EOF    " : "READING";
-    my $status       = "$prefix Lines: $lines_read Time: $running_time";
+    my $status       = "$prefix Lines: $lines_read Elements: $elements_seen Time: $running_time";
     move( $height - 1, 0 );
     highlight( sprintf( "%-${width}s", $status ) );
 
