@@ -51,6 +51,8 @@ if ( !$options{batch} ) {
     }
 }
 
+my $has_devel_size = eval { require Devel::Size };
+
 my $order_by = $options{metric}->[0];
 my $eof      = 0;
 
@@ -348,6 +350,9 @@ sub update_curses {
     my $elements_seen = keys %elements;
     my $prefix       = $eof ? "EOF    " : "READING";
     my $status       = "$prefix Lines: $lines_read Elements: $elements_seen Time: $running_time";
+    if ( $has_devel_size ) {
+	    $status .= " Mem: " . Devel::Size::size(\%elements);
+    }
     move( $height - 1, 0 );
     highlight( sprintf( "%-${width}s", $status ) );
 
