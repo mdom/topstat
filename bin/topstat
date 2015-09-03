@@ -27,7 +27,7 @@ my %options = (
 GetOptions(
     \%options,     "batch|1!",   "format=s", "metric=s@",
     "delimiter=s", "interval=i", "lines=i",  "split!",
-    "update!",     "purge!"
+    "update!",     "purge!",     'update-file=s',
 ) or pod2usage(2);
 
 if ( $options{'split'} ) {
@@ -324,6 +324,9 @@ sub get_lines {
 }
 
 sub update_screen {
+    if ( $options{'update-file'} ) {
+        update_file( $options{'update-file'} );
+    }
     if ( $options{batch} ) {
         update_stdout();
         exit 0 if $eof;
@@ -331,6 +334,16 @@ sub update_screen {
     else {
         update_curses();
     }
+    return;
+}
+
+sub update_file {
+    my ($file) = @_;
+    my @lines = get_lines( $options{lines} );
+    open( my $fh, '>', $file )
+      or die "Can't open $file: $!\n";
+    print {$fh} encode_utf8($_), "\n" for @lines;
+    close $fh;
     return;
 }
 
