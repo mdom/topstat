@@ -32,7 +32,7 @@ Delay between screen updates in seconds. Default to 2.
 
 =item -d, --delimiter DELIMITER
 
-Use DELIMITER instead of consecutive whitespace as delimiter of fields.
+Use I<DELIMITER> instead of consecutive whitespace as delimiter of fields.
 
 =item -1, --batch
 
