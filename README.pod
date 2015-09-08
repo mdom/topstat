@@ -34,6 +34,23 @@ Delay between screen updates in seconds. Default to 2.
 
 Use DELIMITER instead of consecutive whitespace as delimiter of fields.
 
+=item -1, --batch
+
+Write output to stdout instead of displaying it with curses.
+
+=item -u, --update-file FILE
+
+Write output every I<INTERVAL> seconds to I<FILE>. The file is
+overwritten, so you can just read it to get the current state of the
+data. This does not interfere with displaying the data on stdout or
+with curses.
+
+=item -l, --lines LINES
+
+Specifies the number of lines to write to stdout or to the file given
+by I<--update-file>. This does not change the number of lines shown by
+the curses backend, which will always try to fill the screen.
+
 =head1 INSTALLATION
 
 It is possible to install this script via perl normal install routines. 
