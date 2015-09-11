@@ -51,7 +51,9 @@ if ( !$options{batch} ) {
     }
 }
 
-my $has_devel_size = eval { require Devel::Size };
+my $has_devel_size = 0;
+eval { require Devel::Size };
+$has_devel_size = 1 unless $@;
 
 my $order_by = $options{metric}->[0];
 my $eof      = 0;
