@@ -359,6 +359,13 @@ sub update_stdout {
 }
 
 sub update_curses {
+    state $update_running;
+    if ($update_running) {
+        return;
+    }
+    else {
+        $update_running = 1;
+    }
     erase();
     my ( $height, $width );
     getmaxyx( $height, $width );
@@ -379,6 +386,8 @@ sub update_curses {
     highlight( sprintf( "%-${width}s", $status ) );
 
     refresh();
+    $update_running = 0;
+    return;
 }
 
 sub format_seconds {
