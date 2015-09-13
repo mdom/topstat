@@ -124,15 +124,6 @@ if ( !$pid ) {
 	POSIX::pause() while 1;
 }
 
-sub tick {
-    state $n = 0;
-    $n++;
-    if ( $options{update} ) {
-	    update_screen() if $n % $options{interval} == 0;
-    }
-    decay_elements( \%elements ) if $n > 60;
-}
-
 if ( !$options{batch} ) {
     init_curses();
 }
@@ -154,6 +145,15 @@ while (1) {
 }
 
 exit 0;
+
+sub tick {
+    state $n = 0;
+    $n++;
+    if ( $options{update} ) {
+	    update_screen() if $n % $options{interval} == 0;
+    }
+    decay_elements( \%elements ) if $n > 60;
+}
 
 sub process_pipe {
     my ($pipe) = @_;
