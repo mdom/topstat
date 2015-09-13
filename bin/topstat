@@ -112,8 +112,17 @@ $sigpipe_w->blocking(0);
 my $select = IO::Select->new();
 $select->add( $pipe, \*STDIN, $sigpipe_r );
 
-$SIG{ALRM} = sub { print $sigpipe_w 1; alarm 1; };
-alarm 1;
+my $pid = fork();
+
+die "Can't fork timer: $!\n" unless defined $pid;
+
+if ( !$pid ) {
+	require POSIX;
+	close $sigpipe_r;
+	$SIG{ALRM} = sub { print $sigpipe_w 1; alarm 1; };
+	alarm 1;
+	POSIX::pause() while 1;
+}
 
 sub tick {
     state $n = 0;
