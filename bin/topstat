@@ -110,12 +110,11 @@ $select->add( $pipe, \*STDIN );
 $SIG{ALRM} = sub { tick(); alarm 1; };
 alarm 1;
 
-my $n = 0;
-
 sub tick {
+    state $n = 0;
     $n++;
     if ( $options{update} ) {
-	    update_screen() if $n % $options{interval} == 0;
+	    update_screen($n) if $n % $options{interval} == 0;
     }
     decay_elements( \%elements ) if $n > 60;
 }
@@ -326,6 +325,7 @@ sub get_lines {
 }
 
 sub update_screen {
+    my ($seconds) = @_;
     if ( $options{'update-file'} ) {
         update_file( $options{'update-file'} );
     }
@@ -334,7 +334,7 @@ sub update_screen {
         exit 0 if $eof;
     }
     else {
-        update_curses();
+        update_curses($seconds);
     }
     return;
 }
@@ -359,6 +359,7 @@ sub update_stdout {
 }
 
 sub update_curses {
+    my ($seconds) = @_;
     state $update_running;
     if ($update_running) {
         return;
@@ -375,7 +376,7 @@ sub update_curses {
     my @lines = get_lines( $height - 2, $width );
     addstring($_) for @lines;
 
-    my $running_time = format_seconds($n);
+    my $running_time  = format_seconds($seconds);
     my $elements_seen = keys %elements;
     my $prefix       = $eof ? "EOF    " : "READING";
     my $status       = "$prefix Lines: $lines_read Elements: $elements_seen Time: $running_time";
