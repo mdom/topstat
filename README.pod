@@ -51,6 +51,8 @@ Specifies the number of lines to write to stdout or to the file given
 by I<--update-file>. This does not change the number of lines shown by
 the curses backend, which will always try to fill the screen.
 
+=back
+
 =head1 INSTALLATION
 
 It is possible to install this script via perl normal install routines. 
